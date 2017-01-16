@@ -41,7 +41,7 @@ public class InkademyCommandHandler implements CommandHandler {
     }
     
     public void handle(MessageReceivedEvent event) {
-        
+            
         if (!isInkademy(event))
             return;
         if (!isVoiced(event))
@@ -154,7 +154,7 @@ public class InkademyCommandHandler implements CommandHandler {
                     channel.overrideRolePermissions(role, VOICED_ADD_PERMISSIONS, EMPTY_SET);
             }
 
-            ArchiveWriter writer = ArchiveWriter.createWriter("archives\\" + channelName + ".txt");
+            ArchiveWriter writer = ArchiveWriter.createWriter(convertToArchivePath(channelName));
             ArchiveListener listener = ArchiveListener.createListener(channel, writer);
             client.getDispatcher().registerListener(listener);
             
@@ -185,7 +185,7 @@ public class InkademyCommandHandler implements CommandHandler {
             sendMessageToSameChannel(event, "Incorrect number of arguments. Try !help.");
 
         String channelName = tokens.get(1);
-        String archivePath = "archives\\" + channelName + ".txt";
+        String archivePath = convertToArchivePath(channelName);
         
         try {
             if (!ArchiveReader.archiveExists(archivePath))
@@ -270,5 +270,9 @@ public class InkademyCommandHandler implements CommandHandler {
             System.err.println("Missing permissions for channel!");
             e.printStackTrace();
         }
+    }
+    
+    public static String convertToArchivePath(String channelName) {
+        return new StringBuilder().append("archives/").append(channelName).append(".txt").toString();
     }
 }
