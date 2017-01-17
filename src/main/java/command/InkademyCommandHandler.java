@@ -24,9 +24,13 @@ public class InkademyCommandHandler implements CommandHandler {
     private static final String HELP = "!help";
     private static final String CREATE = "!create";
     private static final String ARCHIVE = "!archive";
+    private static final String LISTEN = "!listen";
+    private static final String IGNORE = "!ignore";
     private static final String FINISH = "!finish";
+    private static final String LIST = "!list";
+    private static final String GREP = "!grep";
     private static final Set<String> COMMANDS =
-            Stream.of(HELP, CREATE, ARCHIVE, FINISH).collect(Collectors.toSet());
+            Stream.of(HELP, CREATE, ARCHIVE, LISTEN, IGNORE, FINISH, LIST).collect(Collectors.toSet());
 
     private IDiscordClient client;
     private Map<IChannel, ArchiveListener> managedChannels;
@@ -99,6 +103,18 @@ public class InkademyCommandHandler implements CommandHandler {
             case FINISH:
                 finishCommand(event);
                 break;
+            case LISTEN:
+                listenCommand(event);
+                break;
+            case IGNORE:
+                ignoreCommand(event);
+                break;
+            case LIST:
+                listCommand(event);
+                break;
+            case GREP:
+                grepCommand(event);
+                break;
             default:
                 throw new IllegalStateException("Command not defined for " + command);
         }
@@ -109,11 +125,15 @@ public class InkademyCommandHandler implements CommandHandler {
         final String HELP_MESSAGE = new StringBuilder()
                 .append("Inkademy Bot Usage:\n")
                 .append("  !help                  Display usage\n")
-                .append("  !create channel_name   Create a new archivable channel\n")
+                .append("  !create channel        Create a new archivable channel\n")
                 .append("  !finish                Close and archive this channel\n")
-                .append("  !archive channel_name  Retrieve the archive file for a channel\n")
+                .append("  !archive channel       Retrieve the archive file for a channel\n")
+                .append("  !listen                Start archiving this channel\n")
+                .append("  !ignore                Stop archiving this channel\n")
+                .append("  !list                  List files in the archive\n")
+//                .append("  !grep pattern file     Query files in the archive\n")
                 .toString();
-
+        
         IChannel channel = event.getMessage().getChannel();
         MessageBuilder message = new MessageBuilder(client).withChannel(channel).withQuote(HELP_MESSAGE);
         sendMessage(message);
@@ -245,6 +265,106 @@ public class InkademyCommandHandler implements CommandHandler {
             e.printStackTrace();
         }
     }
+
+    private void listenCommand(MessageReceivedEvent event) {
+
+        List<String> tokens = tokenize(event.getMessage().getContent());
+        if (tokens.size() != 1) {
+            sendMessageToSameChannel(event, "Incorrect number of arguments. Try !help.");
+            return;
+        }
+
+        IChannel channel = event.getMessage().getChannel();
+
+        if (managedChannels.containsKey(channel)) {
+            sendMessageToSameChannel(event, "I'm already listening to this channel");
+            return;
+        }
+        
+        sendMessageToSameChannel(event, "Beginning archive of " + channel.getName());
+
+        ArchiveWriter writer = ArchiveWriter.createWriter(convertToArchivePath(channel.getName()));
+        ArchiveListener listener = ArchiveListener.createListener(channel, writer);
+        client.getDispatcher().registerListener(listener);
+        
+        managedChannels.put(channel, listener);
+    }
+    
+    private void ignoreCommand(MessageReceivedEvent event) {
+
+        List<String> tokens = tokenize(event.getMessage().getContent());
+        if (tokens.size() != 1) {
+            sendMessageToSameChannel(event, "Incorrect number of arguments. Try !help.");
+            return;
+        }
+
+        IChannel channel = event.getMessage().getChannel();
+
+        if (!managedChannels.containsKey(channel)) {
+            sendMessageToSameChannel(event, "I'm already not listening to this channel");
+            return;
+        }
+
+        sendMessageToSameChannel(event, "Stopping archive of " + channel.getName());
+        client.getDispatcher().unregisterListener(managedChannels.remove(channel));
+    }
+
+    private void listCommand(MessageReceivedEvent event) {
+
+        List<String> tokens = tokenize(event.getMessage().getContent());
+        if (tokens.size() != 1)
+            sendMessageToSameChannel(event, "Incorrect number of arguments. Try !help.");
+        
+        try {
+            ArchiveReader.listArchives(event.getMessage().getChannel());
+        }
+        catch (DiscordException e) {
+            System.err.println(e.getErrorMessage());
+            e.printStackTrace();
+        }
+        catch (RateLimitException e) {
+            System.err.println("Sending messages too quickly!");
+            e.printStackTrace();
+        }
+        catch (MissingPermissionsException e) {
+            System.err.println("Missing permissions for channel!");
+            e.printStackTrace();
+        }
+        catch (FileNotFoundException e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void grepCommand(MessageReceivedEvent event) {
+
+        List<String> tokens = tokenize(event.getMessage().getContent());
+        if (tokens.size() != 3)
+            sendMessageToSameChannel(event, "Incorrect number of arguments. Try !help.");
+        
+        String pattern = tokens.get(1);
+        String path = convertToArchivePath(tokens.get(2));
+        
+        try {
+            ArchiveReader.grepArchives(event.getMessage().getChannel(), pattern, path);
+        }
+        catch (DiscordException e) {
+            System.err.println(e.getErrorMessage());
+            e.printStackTrace();
+        }
+        catch (RateLimitException e) {
+            System.err.println("Sending messages too quickly!");
+            e.printStackTrace();
+        }
+        catch (MissingPermissionsException e) {
+            System.err.println("Missing permissions for channel!");
+            e.printStackTrace();
+        }
+        catch (FileNotFoundException e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
     
     private void sendMessageToSameChannel(MessageReceivedEvent event, String content) {
 
@@ -273,6 +393,7 @@ public class InkademyCommandHandler implements CommandHandler {
     }
     
     public static String convertToArchivePath(String channelName) {
+        channelName = channelName.replaceAll("[^A-Za-z0-9_\\-\\*]", "");
         return new StringBuilder().append("archives/").append(channelName).append(".txt").toString();
     }
 }
