@@ -1,7 +1,9 @@
 package command;
 
 import bot.InkademyBot;
-import discord.Messenger;
+import box.discord.command.Command;
+import box.discord.client.Messenger;
+import box.discord.result.Option;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IRole;
@@ -43,9 +45,9 @@ public class CreateCommand implements Command {
         }
         
         String channelName = tokens.get(1);
-        IChannel channel = messenger.createChannel(event.getMessage().getGuild(), channelName);
+        Option<IChannel> channel = messenger.createChannel(event.getMessage().getGuild(), channelName);
         
-        if (channel == null) {
+        if (!channel.isSuccess()) {
             messenger.sendMessage(receivedChannel, "Could not create channel " + channelName);
             messenger.sendMessage(receivedChannel, "Check my server permissions");
             return;
@@ -53,21 +55,21 @@ public class CreateCommand implements Command {
         
         for (IRole role : event.getMessage().getGuild().getRoles()) {
             if (role.isEveryoneRole()) {
-                messenger.addChannelPermissions(channel, role, EVERYONE_ADD_PERMISSIONS);
-                messenger.removeChannelPermissions(channel, role, EVERYONE_REMOVE_PERMISSIONS);
+                messenger.addChannelPermissions(channel.get(), role, EVERYONE_ADD_PERMISSIONS);
+                messenger.removeChannelPermissions(channel.get(), role, EVERYONE_REMOVE_PERMISSIONS);
             }
             else if (role.getName().equals("voiced"))
-                messenger.addChannelPermissions(channel, role, VOICED_ADD_PERMISSIONS);
+                messenger.addChannelPermissions(channel.get(), role, VOICED_ADD_PERMISSIONS);
             else if (role.getName().equals("mod"))
-                messenger.addChannelPermissions(channel, role, VOICED_ADD_PERMISSIONS);
+                messenger.addChannelPermissions(channel.get(), role, VOICED_ADD_PERMISSIONS);
             else if (role.getName().equals("illuminati"))
-                messenger.addChannelPermissions(channel, role, VOICED_ADD_PERMISSIONS);
+                messenger.addChannelPermissions(channel.get(), role, VOICED_ADD_PERMISSIONS);
         }
         
-        bot.listenToChannel(channel);
+        bot.listenToChannel(channel.get());
         
-        messenger.sendMessage(channel, "This channel is now under archive");
-        messenger.sendMessage(channel, "Messages will be saved, however deletions and edits will not be");
-        messenger.sendMessage(channel, "Use !finish to close this channel");
+        messenger.sendMessage(channel.get(), "This channel is now under archive");
+        messenger.sendMessage(channel.get(), "Messages will be saved, however deletions and edits will not be");
+        messenger.sendMessage(channel.get(), "Use !finish to close this channel");
     }
 }

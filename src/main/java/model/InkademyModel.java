@@ -1,6 +1,8 @@
 package model;
 
-import command.Command;
+import box.discord.command.Command;
+import box.discord.result.Option;
+import box.discord.result.Result;
 import org.apache.commons.io.IOUtils;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
@@ -41,7 +43,7 @@ public class InkademyModel {
         }
     }
     
-    public boolean archive(IMessage message, String archiveName) {
+    public Result archive(IMessage message, String archiveName) {
         synchronized (this) {
             
             String fileName = convertToFileName(archiveName);
@@ -53,7 +55,7 @@ public class InkademyModel {
             }
             catch (IOException e) {
                 e.printStackTrace();
-                return false;
+                return Result.Failure(e);
             }
 
             try (FileWriter writer = new FileWriter(file.getAbsoluteFile(), true)) {
@@ -62,14 +64,14 @@ public class InkademyModel {
             }
             catch (IOException e) {
                 e.printStackTrace();
-                return false;
+                return Result.Failure(e);
             }
             
-            return true;
+            return Result.Success();
         }
     }
 
-    public File getArchive(String archiveName) {
+    public Option<File> getArchive(String archiveName) {
         synchronized (this) {
             
             String fileName = convertToFileName(archiveName);
@@ -77,25 +79,25 @@ public class InkademyModel {
             File archive = new File(fileName);
             if (!archive.canRead()) {
                 System.err.println("Could not read " + archiveName);
-                return null;
+                return Result.Failure();
             }
             
-            return archive;
+            return Result.Success(archive);
         }
     }
 
-    public List<String> listArchives() {
+    public Option<List<String>> listArchives() {
         synchronized (this) {
             
             String command = "ls archives";
             try {
                 Process list = Runtime.getRuntime().exec(command);
                 String result = IOUtils.toString(list.getInputStream(), Charset.defaultCharset()).replaceAll("\\.txt", "");
-                return Command.tokenize(result);
+                return Result.Success(Command.tokenize(result));
             }
             catch (IOException e) {
                 e.printStackTrace();
-                return null;
+                return Result.Failure(e);
             }
         }
     }

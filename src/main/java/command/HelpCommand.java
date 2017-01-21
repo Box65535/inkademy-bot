@@ -1,6 +1,7 @@
 package command;
 
-import discord.Messenger;
+import box.discord.client.Messenger;
+import box.discord.command.Command;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 
 import java.util.List;

@@ -1,10 +1,11 @@
 package bot;
 
+import box.discord.command.Command;
+import box.discord.command.CommandListener;
 import command.*;
-import discord.SynchronizedMessenger;
+import box.discord.client.SynchronizedMessenger;
 import listen.ArchiveListener;
-import listen.CommandListener;
-import discord.Messenger;
+import box.discord.client.Messenger;
 import model.InkademyModel;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.obj.IChannel;

@@ -1,6 +1,8 @@
 package command;
 
-import discord.Messenger;
+import box.discord.client.Messenger;
+import box.discord.command.Command;
+import box.discord.result.Option;
 import model.InkademyModel;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
@@ -31,15 +33,15 @@ public class ListCommand implements Command {
             return;
         }
 
-        List<String> archivesList = model.listArchives();
-        if (archivesList == null) {
+        Option<List<String>> archivesList = model.listArchives();
+        if (!archivesList.isSuccess()) {
             messenger.sendMessage(channel, "Could not list archives");
             messenger.sendMessage(channel, "Contact the server admin");
             return;
         }
         
         StringBuilder archives = new StringBuilder();
-        for (String archive : archivesList)
+        for (String archive : archivesList.get())
             archives.append(archive).append(" ");
         messenger.sendMessage(channel, archives.toString());
     }

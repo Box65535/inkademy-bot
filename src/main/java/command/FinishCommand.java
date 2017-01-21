@@ -1,7 +1,8 @@
 package command;
 
 import bot.InkademyBot;
-import discord.Messenger;
+import box.discord.command.Command;
+import box.discord.client.Messenger;
 import model.InkademyModel;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
@@ -41,7 +42,7 @@ public class FinishCommand implements Command {
             return;
         }
         
-        if (!messenger.removeChannel(channel)) {
+        if (!messenger.removeChannel(channel).isSuccess()) {
             messenger.sendMessage(channel, "Could not create channel " + channel.getName());
             messenger.sendMessage(channel, "Check my server permissions");
             return;

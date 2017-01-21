@@ -1,6 +1,8 @@
 package command;
 
-import discord.Messenger;
+import box.discord.client.Messenger;
+import box.discord.command.Command;
+import box.discord.result.Option;
 import model.InkademyModel;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
@@ -34,14 +36,14 @@ public class ArchiveCommand implements Command {
         }
         
         String archiveName = tokens.get(0);
-        File file = model.getArchive(archiveName);
+        Option<File> file = model.getArchive(archiveName);
         
-        if (file == null) {
+        if (!file.isSuccess()) {
             messenger.sendMessage(channel, "Could not find archive " + archiveName);
             messenger.sendMessage(channel, "If you're unsure what your archive is called, try using !list");
             return;
         }
         
-        messenger.uploadFile(channel, file);
+        messenger.uploadFile(channel, file.get());
     }
 }
