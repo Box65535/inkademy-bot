@@ -10,7 +10,7 @@ import sx.blah.discord.handle.obj.IChannel;
 import java.io.File;
 import java.util.List;
 
-public class ArchiveCommand implements Command {
+public class ArchiveCommand implements InkademyCommand {
     
     private InkademyModel model;
     private Messenger messenger;
@@ -21,7 +21,7 @@ public class ArchiveCommand implements Command {
     }
 
     @Override
-    public boolean isCommand(MessageReceivedEvent event) {
+    public boolean matchesCommand(MessageReceivedEvent event) {
         return Command.isFirstToken(event, "!archive");
     }
 

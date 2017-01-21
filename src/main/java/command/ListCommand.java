@@ -9,7 +9,7 @@ import sx.blah.discord.handle.obj.IChannel;
 
 import java.util.List;
 
-public class ListCommand implements Command {
+public class ListCommand implements InkademyCommand {
     
     private InkademyModel model;
     private Messenger messenger;
@@ -19,7 +19,7 @@ public class ListCommand implements Command {
     }
     
     @Override
-    public boolean isCommand(MessageReceivedEvent event) {
+    public boolean matchesCommand(MessageReceivedEvent event) {
         return Command.isFirstToken(event, "!list");
     }
 

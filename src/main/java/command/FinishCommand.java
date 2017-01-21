@@ -9,7 +9,7 @@ import sx.blah.discord.handle.obj.IChannel;
 
 import java.util.List;
 
-public class FinishCommand implements Command {
+public class FinishCommand implements InkademyCommand {
     
     private InkademyBot bot;
     private InkademyModel model;
@@ -22,7 +22,7 @@ public class FinishCommand implements Command {
     }
     
     @Override
-    public boolean isCommand(MessageReceivedEvent event) {
+    public boolean matchesCommand(MessageReceivedEvent event) {
         return Command.isFirstToken(event, "!finish");
     }
 

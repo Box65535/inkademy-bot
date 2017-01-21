@@ -6,7 +6,7 @@ import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 
 import java.util.List;
 
-public class HelpCommand implements Command {
+public class HelpCommand implements InkademyCommand {
     
     private Messenger messenger;
     
@@ -15,7 +15,7 @@ public class HelpCommand implements Command {
     }
     
     @Override
-    public boolean isCommand(MessageReceivedEvent event) {
+    public boolean matchesCommand(MessageReceivedEvent event) {
         return Command.isFirstToken(event, "!help");
     }
     

@@ -12,7 +12,7 @@ import sx.blah.discord.handle.obj.Permissions;
 import java.util.EnumSet;
 import java.util.List;
 
-public class CreateCommand implements Command {
+public class CreateCommand implements InkademyCommand {
     
     private static final EnumSet<Permissions> VOICED_ADD_PERMISSIONS =
             EnumSet.of(Permissions.READ_MESSAGES, Permissions.SEND_MESSAGES);
@@ -30,7 +30,7 @@ public class CreateCommand implements Command {
     }
     
     @Override
-    public boolean isCommand(MessageReceivedEvent event) {
+    public boolean matchesCommand(MessageReceivedEvent event) {
         return Command.isFirstToken(event, "!create");
     }
 
