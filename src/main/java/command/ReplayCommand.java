@@ -1,10 +1,11 @@
 package command;
 
 import bot.InkademyCoordinator;
-import bot.InkademyCoordinator;
-import box.discord.command.Command;
 import box.discord.client.Messenger;
+import box.discord.command.Command;
 import box.discord.result.Option;
+import data.ArchiveMessage;
+import model.InkademyModel;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IRole;
@@ -12,27 +13,30 @@ import sx.blah.discord.handle.obj.Permissions;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Queue;
 
-public class CreateCommand implements InkademyCommand {
-    
+public class ReplayCommand implements InkademyCommand {
+
     private static final EnumSet<Permissions> VOICED_ADD_PERMISSIONS =
             EnumSet.of(Permissions.READ_MESSAGES, Permissions.SEND_MESSAGES);
     private static final EnumSet<Permissions> EVERYONE_ADD_PERMISSIONS =
             EnumSet.of(Permissions.READ_MESSAGE_HISTORY);
     private static final EnumSet<Permissions> EVERYONE_REMOVE_PERMISSIONS =
             EnumSet.of(Permissions.SEND_MESSAGES);
-
+    
+    private InkademyModel model;
     private InkademyCoordinator bot;
     private Messenger messenger;
     
-    public CreateCommand(InkademyCoordinator bot, Messenger messenger) {
+    public ReplayCommand(InkademyCoordinator bot, InkademyModel model, Messenger messenger) {
+        this.model = model;
         this.bot = bot;
         this.messenger = messenger;
     }
     
     @Override
     public boolean matchesCommand(MessageReceivedEvent event) {
-        return Command.isFirstToken(event, "!create");
+        return Command.isFirstToken(event, "!replay");
     }
 
     @Override
@@ -44,8 +48,16 @@ public class CreateCommand implements InkademyCommand {
             messenger.sendMessage(receivedChannel, "Incorrect number of arguments. Try !help.");
             return;
         }
-        
+
         String channelName = tokens.get(1);
+        Option<Queue<ArchiveMessage>> archive = model.getFullArchive(channelName);
+        
+        if (archive.isFailure() || archive.get().isEmpty()) {
+            messenger.sendMessage(receivedChannel, "Could not find archive " + channelName);
+            messenger.sendMessage(receivedChannel, "If you're unsure what your archive is called, try using !list");
+            return;
+        }
+        
         Option<IChannel> channel = messenger.createChannel(event.getMessage().getGuild(), channelName);
         
         if (channel.isFailure()) {
@@ -66,6 +78,9 @@ public class CreateCommand implements InkademyCommand {
             else if (role.getName().equals("illuminati"))
                 messenger.addChannelPermissions(channel.get(), role, VOICED_ADD_PERMISSIONS);
         }
+        
+        for (ArchiveMessage message : archive.get())
+            messenger.sendEmbedMessage(channel.get(), message.toEmbedMessage());
         
         bot.listenToChannel(channel.get());
         

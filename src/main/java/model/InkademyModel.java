@@ -1,122 +1,34 @@
 package model;
 
-import box.discord.command.Command;
 import box.discord.result.Option;
 import box.discord.result.Result;
-import org.apache.commons.io.IOUtils;
+import data.ArchiveMessage;
 import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IMessage;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.time.format.DateTimeFormatter;
-import java.util.HashSet;
-import java.util.List;
+import java.util.Queue;
 import java.util.Set;
+import java.util.SortedSet;
 
-public class InkademyModel {
+public interface InkademyModel {
     
-    private Set<IChannel> archivedChannels;
-
-    public InkademyModel() {
-        archivedChannels = new HashSet<>();
-    }
+    Result addToActiveChannels(IChannel channel);
     
-    public void addToArchived(IChannel channel) {
-        synchronized (this) {
-            archivedChannels.add(channel);
-        }
-    }
+    Result removeFromActiveChannels(IChannel channel);
+
+    Option<Set<String>> getActiveChannels();
+
+    Option<Set<String>> getAllArchivedTopics();
     
-    public void removeFromArchived(IChannel channel) {
-        synchronized (this) {
-            archivedChannels.remove(channel);
-        }
-    }
-
-    public Set<IChannel> getArchivedChannels() {
-        synchronized (this) {
-            return archivedChannels;
-        }
-    }
+    Result putMessage(IMessage message);
     
-    public Result archive(IMessage message, String archiveName) {
-        synchronized (this) {
-            
-            String fileName = convertToFileName(archiveName);
+    Result updateMessage(IMessage message);
 
-            File file = new File(fileName);
-            try {
-                if (!file.exists())
-                    file.createNewFile();
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-                return Result.Failure(e);
-            }
+    Result deleteMessage(IMessage message);
 
-            try (FileWriter writer = new FileWriter(file.getAbsoluteFile(), true)) {
-                String formatted = formatMessage(message);
-                writer.write(formatted);
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-                return Result.Failure(e);
-            }
-            
-            return Result.Success();
-        }
-    }
+    Option<Queue<ArchiveMessage>> getFullArchive(String topic);
 
-    public Option<File> getArchive(String archiveName) {
-        synchronized (this) {
-            
-            String fileName = convertToFileName(archiveName);
-            
-            File archive = new File(fileName);
-            if (!archive.canRead()) {
-                System.err.println("Could not read " + archiveName);
-                return Result.Failure();
-            }
-            
-            return Result.Success(archive);
-        }
-    }
-
-    public Option<List<String>> listArchives() {
-        synchronized (this) {
-            
-            String command = "ls archives";
-            try {
-                Process list = Runtime.getRuntime().exec(command);
-                String result = IOUtils.toString(list.getInputStream(), Charset.defaultCharset()).replaceAll("\\.txt", "");
-                return Result.Success(Command.tokenize(result));
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-                return Result.Failure(e);
-            }
-        }
-    }
+    Option<Queue<ArchiveMessage>> queryArchive(String pattern);
     
-    private static String convertToFileName(String archiveName) {
-        archiveName = archiveName.replaceAll("[^A-Za-z0-9_\\-\\*]", "");
-        return new StringBuilder().append("archives/").append(archiveName).append(".txt").toString();
-    }
-
-    private static String formatMessage(IMessage message) {
-
-        IGuild guild = message.getGuild();
-        return new StringBuilder()
-                .append(message.getAuthor().getName())
-                .append(" says on [")
-                .append(message.getTimestamp().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-                .append("]  ")
-                .append(message.getContent())
-                .append("\n")
-                .toString();
-    }
+    Option<Queue<ArchiveMessage>> queryArchive(String topic, String pattern);
 }

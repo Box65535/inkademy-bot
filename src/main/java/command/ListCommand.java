@@ -8,6 +8,7 @@ import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
 
 import java.util.List;
+import java.util.Set;
 
 public class ListCommand implements InkademyCommand {
     
@@ -15,6 +16,7 @@ public class ListCommand implements InkademyCommand {
     private Messenger messenger;
     
     public ListCommand(InkademyModel model, Messenger messenger) {
+        this.model = model;
         this.messenger = messenger;
     }
     
@@ -33,8 +35,8 @@ public class ListCommand implements InkademyCommand {
             return;
         }
 
-        Option<List<String>> archivesList = model.listArchives();
-        if (!archivesList.isSuccess()) {
+        Option<Set<String>> archivesList = model.getAllArchivedTopics();
+        if (archivesList.isFailure()) {
             messenger.sendMessage(channel, "Could not list archives");
             messenger.sendMessage(channel, "Contact the server admin");
             return;

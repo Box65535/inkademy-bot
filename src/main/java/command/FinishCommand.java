@@ -1,21 +1,23 @@
 package command;
 
-import bot.InkademyBot;
+import bot.InkademyCoordinator;
 import box.discord.command.Command;
 import box.discord.client.Messenger;
+import box.discord.result.Option;
 import model.InkademyModel;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
 
 import java.util.List;
+import java.util.Set;
 
 public class FinishCommand implements InkademyCommand {
     
-    private InkademyBot bot;
+    private InkademyCoordinator bot;
     private InkademyModel model;
     private Messenger messenger;
     
-    public FinishCommand(InkademyBot bot, InkademyModel model, Messenger messenger) {
+    public FinishCommand(InkademyCoordinator bot, InkademyModel model, Messenger messenger) {
         this.bot = bot;
         this.model = model;
         this.messenger = messenger;
@@ -35,15 +37,22 @@ public class FinishCommand implements InkademyCommand {
             messenger.sendMessage(channel, "Incorrect number of arguments. Try !help.");
             return;
         }
-        
-        if (!model.getArchivedChannels().contains(channel)) {
+
+        Option<Set<String>> activeChannels = model.getActiveChannels();
+        if (activeChannels.isFailure()) {
+            messenger.sendMessage(channel, "Could not connect to database");
+            messenger.sendMessage(channel, "Cannot verify that this is a valid channel");
+            return;
+        }
+                
+        if (!activeChannels.get().contains(channel.getID())) {
             messenger.sendMessage(channel, "This is not an archived channel");
             messenger.sendMessage(channel, "Only use !finish in channels created by me");
             return;
         }
         
-        if (!messenger.removeChannel(channel).isSuccess()) {
-            messenger.sendMessage(channel, "Could not create channel " + channel.getName());
+        if (messenger.removeChannel(channel).isFailure()) {
+            messenger.sendMessage(channel, "Could not remove channel " + channel.getName());
             messenger.sendMessage(channel, "Check my server permissions");
             return;
         }

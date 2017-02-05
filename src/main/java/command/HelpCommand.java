@@ -24,11 +24,13 @@ public class HelpCommand implements InkademyCommand {
 
         String message = new StringBuilder()
                 .append("Inkademy Bot Usage:\n")
-                .append("  !help                  Display usage\n")
-                .append("  !create channel        Create a new archivable channel\n")
-                .append("  !finish                Close and archive this channel\n")
-                .append("  !archive channel       Retrieve the archive file for a channel\n")
-                .append("  !list                  List files in the archive\n")
+                .append(" !help                        Display usage\n")
+                .append(" !create [TOPIC]              Create a new channel with archiving\n")
+                .append(" !finish                      Close this channel\n")
+                .append(" !archive [TOPIC]             Retrieve the archive file for topic\n")
+                .append(" !query [TOPIC] [PATTERN]     Search archives for content pattern\n")
+                .append(" !replay [TOPIC]              Replay channel from archive\n")
+                .append(" !list                        List files in the archive\n")
                 .toString();
         
         messenger.sendQuoteMessage(event.getMessage().getChannel(), message);
